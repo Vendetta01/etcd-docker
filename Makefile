@@ -1,6 +1,7 @@
 
 REGISTRY:=npodewitz
-CONTAINER_NAME:=etcd
+IMAGE_NAME:=etcd
+CONTAINER_NAME:=${IMAGE_NAME}
 DOCKER_RUN_ARGS:=-p 2379:2379 -p 2380:2380
 VERSION:=
 
@@ -8,19 +9,19 @@ VERSION:=
 .PHONY: build build-nc run debug debug-exec stop up clean
 
 build:
-	docker build -t ${REGISTRY}/${CONTAINER_NAME} .
+	docker build -t ${REGISTRY}/${IMAGE_NAME} .
 
 build-nc:
-	docker build -t --no-cache -t ${REGISTRY}/${CONTAINER_NAME} .
+	docker build -t --no-cache -t ${REGISTRY}/${IMAGE_NAME} .
 
 run:
-	docker run -it --name ${CONTAINER_NAME} ${DOCKER_RUN_ARGS} ${REGISTRY}/${CONTAINER_NAME}
+	docker run -it --name ${CONTAINER_NAME} ${DOCKER_RUN_ARGS} ${REGISTRY}/${IMAGE_NAME}
 
 debug:
-	docker run -it --name ${CONTAINER_NAME} --entrypoint /bin/bash ${REGISTRY}/${CONTAINER_NAME}
+	docker run -it --name ${CONTAINER_NAME} --entrypoint /bin/bash ${REGISTRY}/${IMAGE_NAME}
 
 debug-exec:
-	docker exec -it --name ${CONTAINER_NAME} /bin/bash
+	docker exec -it ${CONTAINER_NAME} /bin/bash
 
 stop:
 	-docker stop ${CONTAINER_NAME}
