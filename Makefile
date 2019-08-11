@@ -18,7 +18,7 @@ build-debug:
 	docker build --target BUILD -t ${IMAGE_NAME} .
 
 run:
-	docker run -it --name ${CONTAINER_NAME} ${DOCKER_RUN_ARGS} ${IMAGE_NAME}
+	docker run --name ${CONTAINER_NAME} ${DOCKER_RUN_ARGS} ${IMAGE_NAME}
 
 debug:
 	docker run -it --name ${CONTAINER_NAME} --entrypoint /bin/bash ${IMAGE_NAME}

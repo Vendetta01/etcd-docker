@@ -10,7 +10,7 @@ FIRST_START_FILE_URL=/tmp/first_start_done
 function initialize {
 	echo "Initializing..."
 	echo "Wait for etcd to run"
-	while [ ! $(/usr/bin/etcdctl_wrapper.sh endpoint status) ]; do sleep 1; echo "DEBUG: Waiting for etcd"; done
+	while [[ ! $(/usr/bin/etcdctl_wrapper.sh endpoint status) ]]; do sleep 1; echo "DEBUG: Waiting for etcd"; done
 
 	if [[ -e "${ETCD_IMPORT_FILE}" ]]; then
 		echo "DEBUG: Importing..."

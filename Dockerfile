@@ -47,5 +47,9 @@ RUN apk add --update --no-cache bash
 
 COPY --from=BUILD /usr/bin/etcd /usr/bin/etcd
 COPY --from=BUILD /usr/bin/etcdctl /usr/bin/etcdctl
+COPY ./etcd.conf.yml.example_test /etc/etcd/etcd.conf.yml
 COPY scripts/* /usr/bin/
+
+ENTRYPOINT ["docker_entrypoint.sh"]
+CMD ["--config-file", "/etc/etcd/etcd.conf.yml"]
 
