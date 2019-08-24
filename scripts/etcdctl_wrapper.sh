@@ -1,3 +1,4 @@
 #!/bin/bash
 
-etcdctl --cert /etcd-data/fixtures/client/cert.pem --key /etcd-data/fixtures/client/key.pem --insecure-skip-tls-verify $@
+etcdctl --endpoints $(hostname):2379 --cert /etc/ssl/etcd_client.crt --key /etc/ssl/etcd_client.key --cacert /etc/ssl/etcd_rootCA.crt $@
+

@@ -2,8 +2,8 @@ ARG ETCDCTL_API
 
 FROM alpine:edge AS BUILD
 
-LABEL local.podewitz.version="3.3.13"
-LABEL local.podewitz.maintainer="Nils Podewitz <nils.podewitz@googlemail.com>"
+LABEL local.podewitz.etcd.version="3.3.13"
+LABEL local.podewitz.etcd.maintainer="Nils Podewitz <nils.podewitz@googlemail.com>"
 
 ENV VERSION=3.3.13
 ENV ETCDCTL_API=${ETCDCTL_API:-3}
