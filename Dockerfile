@@ -22,7 +22,7 @@ RUN ln -s ${DOCKER_INSTALL_DIRECTORY}/etcdctl /usr/bin/etcdctl
 
 
 # Configure
-COPY ./etcd.conf.yml.example_test /etc/etcd/etcd.conf.yml
+COPY ./etcd.conf.yml.example /etc/etcd/etcd.conf.yml
 COPY ./scripts/etcdctl_wrapper.sh /usr/bin/etcdctl_wrapper.sh
 COPY scripts/* /usr/bin/
 
@@ -35,8 +35,8 @@ VOLUME ["/etcd-data"]
 ENTRYPOINT ["docker_entrypoint.sh"]
 CMD ["--config-file", "/etc/etcd/etcd.conf.yml"]
 
-COPY ./test.kv /tmp/test.kv
-ENV ETCD_IMPORT_FILE=/tmp/test.kv
+#COPY ./test.kv /tmp/test.kv
+#ENV ETCD_IMPORT_FILE=/tmp/test.kv
 
 
 FROM alpine:edge AS RELEASE
@@ -47,9 +47,14 @@ RUN apk add --update --no-cache bash
 
 COPY --from=BUILD /usr/bin/etcd /usr/bin/etcd
 COPY --from=BUILD /usr/bin/etcdctl /usr/bin/etcdctl
-COPY ./etcd.conf.yml.example_test /etc/etcd/etcd.conf.yml
+COPY ./etcd.conf.yml.example /etc/etcd/etcd.conf.yml
 COPY scripts/* /usr/bin/
 
+WORKDIR /tmp
+
+EXPOSE 2379 2380
+
+VOLUME ["/etcd-data"]
 ENTRYPOINT ["docker_entrypoint.sh"]
 CMD ["--config-file", "/etc/etcd/etcd.conf.yml"]
 

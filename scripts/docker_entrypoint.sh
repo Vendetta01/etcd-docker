@@ -5,29 +5,15 @@ set -e
 
 # Variables
 FIRST_START_FILE_URL=/tmp/first_start_done
-SECRET_SSL_CRT=/run/secrets/etcd_ssl_crt
-SECRET_SSL_KEY=/run/secrets/etcd_ssl_key
-SECRET_ROOT_CRT=/run/secrets/root_crt
-ETCD_SSL_BASE_PATH=/etc/ssl
-ETCD_SSL_CRT=${ETCD_SSL_BASE_PATH}/etcd_client.crt
-ETCD_SSL_KEY=${ETCD_SSL_BASE_PATH}/etcd_client.key
-ETCD_SSL_ROOT_CRT=${ETCD_SSL_BASE_PATH}/etcd_rootCA.crt
+SECRET_SSL_CRT=/run/secrets/etcd_client_ssl_crt
+SECRET_SSL_KEY=/run/secrets/etcd_client_ssl_key
+SECRET_ROOT_CRT=/run/secrets/root_ca_crt
 
 # functions
-function copy_ssl {
-    echo "Trying to copy ssl certificate and key from secret"
-    if [[ -f "${SECRET_SSL_CRT}" && -f "${SECRET_SSL_KEY}" ]]; then
-	echo "Found ssl cert and key in /run/secrets: copying to data-dir..."
-	mkdir -p ${ETCD_SSL_BASE_PATH} && \
-	    cp -a ${SECRET_SSL_CRT} ${ETCD_SSL_CRT} && \
-	    cp -a ${SECRET_SSL_KEY} ${ETCD_SSL_KEY} || \
-	    echo "ERROR: ssl cert and key could not be copied!"
-    fi
-    if [[ -f "${SECRET_ROOT_CRT}" ]]; then
-	echo "Root CA found, installing..."
-	mkdir -p ${ETCD_SSL_BASE_PATH} && \
-	    cp -a ${SECRET_ROOT_CRT} ${ETCD_SSL_ROOT_CRT}
-    fi
+function create_etcdctl_wrapper {
+    echo "Creating etcdctl_wrapper..."
+    echo -e "#!/bin/bash\n/usr/bin/etcdctl --endpoints \$(hostname):2379 --cert ${SECRET_SSL_CRT} --key ${SECRET_SSL_KEY} --cacert ${SECRET_ROOT_CRT} \$@" > /usr/bin/etcdctl_wrapper.sh
+    chmod 755 /usr/bin/etcdctl_wrapper.sh
 }
 
 function initialize {
@@ -55,7 +41,7 @@ function initialize {
 # main
 if [[ ! -e "$FIRST_START_FILE_URL" ]]; then
 	# Do stuff
-	copy_ssl
+	create_etcdctl_wrapper
 	initialize &
 fi
 
