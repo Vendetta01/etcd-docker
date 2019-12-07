@@ -1,50 +1,52 @@
 #!/bin/bash
 
-# Exit immmideiatley if a command exits with a non-zero status.
+# Exit immediately if a command exits with a non-zero status.
 set -e
 
 # Variables
-FIRST_START_FILE_URL=/tmp/first_start_done
-SECRET_SSL_CRT=/run/secrets/etcd_client_ssl_crt
-SECRET_SSL_KEY=/run/secrets/etcd_client_ssl_key
-SECRET_ROOT_CRT=/run/secrets/root_ca_crt
+source /usr/bin/environment.sh
 
 # functions
-function create_etcdctl_wrapper {
-    echo "Creating etcdctl_wrapper..."
-    echo -e "#!/bin/bash\n/usr/bin/etcdctl --endpoints \$(hostname):2379 --cert ${SECRET_SSL_CRT} --key ${SECRET_SSL_KEY} --cacert ${SECRET_ROOT_CRT} \$@" > /usr/bin/etcdctl_wrapper.sh
-    chmod 755 /usr/bin/etcdctl_wrapper.sh
-}
-
 function initialize {
-	echo "Initializing..."
-	echo "Wait for etcd to run"
-	while [[ ! $(/usr/bin/etcdctl_wrapper.sh endpoint status) ]]; do sleep 1; echo "DEBUG: Waiting for etcd"; done
+    logit "INFO" "Initializing..."
 
-	if [[ -e "${ETCD_IMPORT_FILE}" ]]; then
-		echo "DEBUG: Importing..."
-		while read -r line; do
-			# Split line
-			read -ra kv <<< "$line"
-			KEY="${kv[0]}"
-			VALUE="${kv[@]:1}"
-			printf "DEBUG: kv[0]: ${KEY}: kv[1]: ${VALUE}\n"
-			printf "${VALUE}" | \
-				/usr/bin/etcdctl_wrapper.sh put -- ${KEY}
-		done < ${ETCD_IMPORT_FILE}
-	fi
+    # TODO: use confd to init etcd-config
+    logit "DEBUG" "Starting etcd with ETCDD_CLIENT_SETUP_PORT for initialization"
+    /usr/bin/etcd --listen-client-urls ${CLIENT_SETUP_URL} \
+	--advertise-client-urls ${CLIENT_SETUP_URL} \
+	--name 'etcd' \
+	--data-dir '/etcd-data' &
+    ETCD_PID=$!
 
-	touch "$FIRST_START_FILE_URL"
+    logit "INFO" "Wait for etcd initialization instance to run"
+    while [[ ! $(${INIT_WRAPPER_ETCDCTL} endpoint status) ]]; do
+	logit "DEBUG" "Waiting for etcd initialization instance"
+	sleep 1
+    done
+
+    if [[ -e "${IMPORT_DIR}" ]]; then
+	logit "DEBUG" "Importing from directory: ${IMPORT_DIR}"
+	# Set etcd_import_dir mode to init (=1)
+	/usr/bin/etcd_import_dir_init.sh ${IMPORT_DIR}
+    fi
+
+    # Stop etcd initialization instance
+    logit "INFO" "Stopping etcd initialization instance..."
+    kill ${ETCD_PID}
+    wait
+
+    touch "$FIRST_START_FILE_URL"
+
+    logit "INFO" "Initialization done"
 }
 
 
 # main
 if [[ ! -e "$FIRST_START_FILE_URL" ]]; then
-	# Do stuff
-	create_etcdctl_wrapper
-	initialize &
+    initialize
 fi
 
-
 # Start etcd
+logit "INFO" "Starting etcd..."
 exec /usr/bin/etcd "$@"
+
