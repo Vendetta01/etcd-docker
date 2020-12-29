@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Exit immediately if a command exits with a non-zero status.
-set -e
+set -eo pipefail
 
 # Variables
 source /usr/bin/environment.sh
@@ -70,7 +70,7 @@ if [[ ${E3CH_MODE} -ne 0 ]]; then
     done
 fi
 
-for i in $(find . -type f); do
+for i in $(find . -type f ! -name '*.secret'); do
     key=${i:1}
     if [[ "${key:0:1}" != "/" ]]; then
 	logit "info" "Skipping invalid key not starting with '/': ${key@Q}"
